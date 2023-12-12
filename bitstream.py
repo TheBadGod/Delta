@@ -72,67 +72,6 @@ class BitStream:
 
         return bytes(data)
 
-    def ReadSymbol(self, lut):
-        N = bs.p(32) | (1<<31)
-        size = LowestLookup(self.p(32) | (1<<31))
-        s = [0,1,2,6,10,14,16,17,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18][size]
-        o = (N>>(size+1)) & [0,0,3,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0][size]
-        codesize = s + o
-        symbol = [0x31,0x30,0x189,0x1bd,0x1bb,0x1c1,0x1a9,0x1b2,
-                   0x1b0,0x1ba,0x1ac,0x1b5,0x1b1,0x1bc,0x1aa,0x1ab,
-                   0x1a3,0x19d,0x18a][codesize]
-        symbol_length = lut[symbol]
-        self.r(symbol_length)
-        #print(size, codesize, symbol, symbol_length)
-
-        if symbol >= 0x100:
-            symbol -= 0x100
-            lo = symbol & 7
-            hi = symbol >> 3
-            print(hi, lo)
-
-            
-            if hi == 0:
-                length = self.r(14) - 0x2000 + 0x2a000
-            elif hi == 1:
-                length = self.r(16)
-                if length < 0x8000:
-                    length = length + 0x2000 + 0x2a000
-                else:
-                    length = length - 0x2000 + 0x2a000
-            elif hi == 2:
-                length = self.r(18)
-                if length < 0x20000:
-                    length = length + 0x34000
-                else:
-                    length = length - 0xa000
-            elif hi < 7:
-                length = hi - 3 + 0x54000
-            else:
-                length = 0
-                x = hi - 7
-                if x < 4:
-                    assert False
-                else:
-                    a = (x >> 1) - 1
-                    b = (x & 1) + 2
-                    
-                    if a >= 4:
-                        a -= 4
-                        assert x>>1 != 5, "NYI"
-                        value = (b << a) | (self.r(a))
-                        print(value)
-
-                    else:
-                        assert False
-
-            length &= (2**32-1)
-            assert False, "special stuff (delta encoding) not implemented"
-        else:
-            return symbol
-        
-        return n
-
     def ReadBuffer(self):
         size = self.ReadInt()
         self.cursor += 7
