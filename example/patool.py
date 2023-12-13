@@ -49,7 +49,7 @@ if __name__ == "__main__":
         out_data = parse_delta(data, source, args.verbose)
 
         if args.diff:
-            print(hexdump(xor(source, out_data)))
+            print(hexdump(bytes([out_data[i] if source[i]!=out_data[i] else 0 for i in range(len(out_data))])))
             
         if output_patched_data:
             if args.output:
