@@ -69,7 +69,13 @@ class BitStream:
 
                 offset += n
             elif value >= 0x11:
-                assert False, f"NYI: {value}"
+                # we take from the previous layer and add/subtract a small value
+                add_value = value - 0x11
+                if add_value < 3:
+                    data[offset] = previous[offset] + add_value + 1
+                else:
+                    data[offset] = previous[offset] - add_value + 2
+                offset += 1
             else:
                 data[offset] = value
                 offset += 1
