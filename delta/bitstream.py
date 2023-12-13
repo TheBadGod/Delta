@@ -9,6 +9,10 @@ class BitStream:
                 self.bits.append(1 if b&(1<<i) else 0)
         self.cursor = 0
 
+        leftover = self.r(3)
+        if leftover:
+            self.bits = self.bits[:-leftover]
+
     def r(self,n):
         assert self.cursor + n <= len(self.bits), f"Wanted to read {n} bits, only have {len(self.bits)-self.cursor} available"
         b = self.bits[self.cursor:self.cursor+n]
@@ -79,5 +83,5 @@ class BitStream:
         return self.rb(size)
     
     def finished(self):
-        return self.cursor >= len(self.bits) or (set(self.bits[self.cursor:]) == {0} and len(self.bits)-self.cursor<=7)
+        return self.cursor >= len(self.bits)
 

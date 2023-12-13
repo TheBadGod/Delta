@@ -10,9 +10,6 @@ def parse_delta(pa30, source, debug=False):
 
     bs = BitStream(pa30)
     
-    # reads 3 bits? currently unknown
-    bs.r(3)
-
     Version = bs.ReadInt()
     Code = bs.ReadInt()
     Flags = bs.ReadInt()
@@ -34,8 +31,6 @@ def parse_delta(pa30, source, debug=False):
     bs = BitStream(patchBuffer)
 
     # compo::RiftTable::InternalFromBitReader
-    # again first three bits are unknown? => bitreader internals?
-    bs.r(3)
     if bs.r(1):
         print("Parsing a rifttable, not implemented")
         print(bs.ReadInt())
