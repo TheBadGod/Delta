@@ -132,53 +132,40 @@ class CompressionFormat:
 
             if sym.MatchLength == 1:
                 buffer += bytes([sym.Value])
-            else:
+            elif sym.Value >= 0x54000:
                 if sym.Value == 0x54000:
+                    # just copy the data from the same position in the source
+                    # probably useful if your offsets did not change
                     buffer += source[length:length+sym.MatchLength]
+                    # address to be used in the lru, not sure if correct...
                     addr = length - len(source)
-                    if addr != lru[0]:
-                        tmp = lru[1]
-                        lru[1] = lru[0]
-                        if addr != tmp:
-                            lru[2] = tmp
-                        lru[0] = addr
-
                 elif sym.Value > 0x54000:
                     idx = sym.Value - 0x54001
                     if idx < 3:
                         addr = lru[idx]
                     else:
                         addr = idx - 2
-
-                    #print("Chosen value: ", sym, hex(length-addr), len(buffer), buffer)
+                    
+                    # all addresses here are relative
                     src_addr = length-addr
 
-                    # update the least recently used addresses. in the binary
-                    # this happens after copying the data, but whatever
-                    if addr != lru[0]:
-                        tmp = lru[1]
-                        lru[1] = lru[0]
-                        # if lru would be kicked out, then we need to shift it
-                        if addr != tmp:
-                            lru[2] = tmp
-                        lru[0] = addr
-
                     assert src_addr < len(buffer), "Trying to read uninited memory"
-                    for addr in range(src_addr, src_addr + sym.MatchLength):
-                        if addr < 0:
-                            added = source[addr]
-                        else:
-                            added = buffer[addr]
-                        buffer += bytes([added])
+                    for a in range(src_addr, src_addr + sym.MatchLength):
+                        buffer += bytes([source[a] if a < 0 else buffer[a]])
 
-
-                else:
-                    print(f"Rift stuff: {sym} {buffer}")
-                    assert False, "NYI (rift table stuff)"
+                # update the lru cache
+                if addr != lru[0]:
+                    tmp = lru[1]
+                    lru[1] = lru[0]
+                    if addr != tmp:
+                        lru[2] = tmp
+                    lru[0] = addr
+            else:
+                print(f"Rift stuff: {sym} {buffer}")
+                assert False, "NYI (rift table stuff)"
 
             length += sym.MatchLength
 
-            
         return buffer
 
 class CompositeFormat:
