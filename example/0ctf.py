@@ -1,12 +1,15 @@
 if __name__ == '__main__':
-    if __package__ is None:
-        # https://stackoverflow.com/questions/11536764/how-to-fix-attempted-relative-import-in-non-package-even-with-init-py/27876800#27876800
-        import sys
-        from os import path
-        sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    try:
         from delta import parse_delta
-    else:
-        from ..delta import parse_delta
+    except:
+        if __package__ is None:
+            # https://stackoverflow.com/questions/11536764/how-to-fix-attempted-relative-import-in-non-package-even-with-init-py/27876800#27876800
+            import sys
+            from os import path
+            sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+            from delta import parse_delta
+        else:
+            from ..delta import parse_delta
 
     xor = lambda x,y: bytes([a^b for a, b in zip(x, y)])
 
@@ -16,7 +19,7 @@ if __name__ == '__main__':
 
     # computed by a patched msdelta.dll to not care about checksums
     # and same source array as we have here
-    wanted = open("out.dat","rb").read()
+    wanted = open(path.dirname(path.abspath(__file__))+"/out.dat","rb").read()
 
     DEBUG = False
 
