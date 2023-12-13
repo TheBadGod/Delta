@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from pwn import hexdump, xor
 
 try:
     from delta import parse_delta, get_delta_info
@@ -20,6 +21,11 @@ if __name__ == "__main__":
 
     parser.add_argument("filename", help="The file you want to parse")
 
+    parser.add_argument("--input", "-i", help="If you want to apply the patch the source file to apply the patch to", required=False)
+    parser.add_argument("--output", "-o", help="If you want to apply the patch the destination file to output the patched data", required=False)
+    parser.add_argument("--diff", "-d", help="Print the diff of the source data (defaults to null bytes) and the output data", required=False, action="store_true")
+    parser.add_argument("--verbose", "-v", help="Print extra verbose information", required=False, action="store_true")
+
     args = parser.parse_args()
 
     with open(args.filename, "rb") as f:
@@ -28,5 +34,28 @@ if __name__ == "__main__":
             data = data[4:]
         
         delta = get_delta_info(data)
-        source = b"\x00" * delta.TargetSize
-        parse_delta(data, source, True)
+
+        
+        if args.input:
+            with open(args.input, "rb") as f:
+                source = f.read()
+            # fill with null bytes
+            source += b"\x00" * (delta.TargetSize - len(source))
+            output_patched_data = True
+        else:
+            source = b"\x00" * delta.TargetSize
+            output_patched_data = False
+        
+        out_data = parse_delta(data, source, args.verbose)
+
+        if args.diff:
+            print(hexdump(xor(source, out_data)))
+            
+        if output_patched_data:
+            if args.output:
+                with open(args.output, "wb") as f:
+                    f.write(out_data)
+            elif not args.diff:
+                # only print the data if we're not diffing and not writing to a file
+                print(hexdump(out_data))
+
