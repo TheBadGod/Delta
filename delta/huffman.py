@@ -1,7 +1,15 @@
 from .util import HighestLookup, LowestLookup
 
 class Codes:
+    """
+    The huffman codes, responsible to calculate the lengths and positions
+    of all the code-words
+    """
     def __init__(self, num_codes, code_size, zero_inited):
+        """
+        Initialize to default values, either all zero or with default values
+        to fill the tree
+        """
         self.max_size = code_size
         
         self.codes = [0]*num_codes
@@ -15,6 +23,9 @@ class Codes:
         return s
 
     def ResetLengths(self, zero_inited):
+        """
+        Fills the values to fill the tree
+        """
         if zero_inited:
             self.codes = [0]*len(self.codes)
         elif len(self.codes) < 3:
@@ -41,6 +52,9 @@ class Codes:
             assert len(self.codes) == length
 
     def CalculateCodes(self):
+        """
+        Calculate the huffman tree codes
+        """
         # step 1: count frequencies
         frequencies = [0] * (self.max_size + 1)
         for i in self.codes:
@@ -85,11 +99,17 @@ class Codes:
 
 
     def SetLengths(self, codes):
+        """
+        Set the lengths of our codewords, recalculates the codes
+        """
         assert len(codes) == len(self.codes)
         self.codes = codes
         self.CalculateCodes()
 
 class DecoderTable:
+    """
+    Wraps the codes with the ability to read symbols from a bitstream
+    """
     def __init__(self, codes):
         #print("Initializing table with", codes)
         
@@ -163,11 +183,17 @@ class DecoderTable:
         return f"""DecoderTable <Values={self.values}>"""
 
     def Read(self, bs):
+        """
+        Reads a single symbol (number) from the bitstream
+        """
         N = bs.p(32) | (1 << 31)
         size = LowestLookup(N)
+        # lowest bit determines how many bits and which mask we will use
         offset = self.offsets[size]
         mask = self.masks[size]
+        # then we read the number (size+1 values were consumed by the size value)
         value_index = ((N>>(size + 1)) & mask) + offset
+        # look up the value in our values and advance the stream by the length of that word
         value = self.values[value_index]
         bs.r(self.lengths[value])
         return value

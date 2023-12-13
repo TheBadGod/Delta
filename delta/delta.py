@@ -1,6 +1,9 @@
 from .bitstream import BitStream
 
 class DeltaInfo:
+    """
+    Information struct about the delta patch
+    """
     def __init__(self, Version, Code, Flags, TargetSize, HashAlgId, Hash):
         self.Version = Version
         self.Code = Code
@@ -13,6 +16,9 @@ class DeltaInfo:
         return f"Delta <Version={self.Version} Code={self.Code} Flags=0x{self.Flags:x} TargetSize=0x{self.TargetSize:x} HashAlgId=0x{self.HashAlgId:x} Hash={self.Hash}>"
 
 def get_delta_info(pa30):
+    """
+    Fetch some information about the delta patch
+    """
     assert pa30[:4] == b"PA30"
 
     # go to start of bitstream
@@ -32,6 +38,9 @@ def get_delta_info(pa30):
     return DeltaInfo(Version, Code, Flags, TargetSize, HashAlgId, Hash)
 
 def parse_delta(pa30, source, debug=False):
+    """
+    Applies the delta patch pa30 to source
+    """
     assert pa30[:4] == b"PA30"
 
     # go to start of bitstream
